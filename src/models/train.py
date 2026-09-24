@@ -1,4 +1,6 @@
 import pandas as pd
+import joblib
+import json
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -8,7 +10,6 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
-import joblib
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -122,24 +123,45 @@ if __name__ == "__main__":
 
     y_pred = pipeline.predict(X_test)
     y_probability = pipeline.predict_proba(X_test)[:, 1]
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+    roc_auc = roc_auc_score(y_test, y_probability)
 
     print("\nConfusion matrix:")
     print(confusion_matrix(y_test, y_pred))
 
     print("\nAccuracy:")
-    print(f"{accuracy_score(y_test, y_pred):.4f}")
+    print(f"{accuracy:.4f}")
 
     print("\nPrecision:")
-    print(f"{precision_score(y_test, y_pred):.4f}")
+    print(f"{precision:.4f}")
 
     print("\nRecall:")
-    print(f"{recall_score(y_test, y_pred):.4f}")
+    print(f"{recall:.4f}")
 
     print("\nF1-score:")
-    print(f"{f1_score(y_test, y_pred):.4f}")
+    print(f"{f1:.4f}")
 
     print("\nROC-AUC:")
-    print(f"{roc_auc_score(y_test, y_probability):.4f}")
+    print(f"{roc_auc:.4f}")
 
     print("\nClassification report:")
     print(classification_report(y_test, y_pred))
+
+    metadata = {
+        "model_type": "LogisticRegression",
+        "training_samples": len(X_train),
+        "testing_samples": len(X_test),
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
+        "f1_score": f1,
+        "roc_auc": roc_auc,
+    }
+
+    with open("artifacts/baseline_metadata.json", "w") as file:
+        json.dump(metadata, file, indent=4)
+
+    print("Metadata saved to artifacts/baseline_metadata.json")

@@ -1,4 +1,13 @@
 import pandas as pd
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -106,3 +115,27 @@ if __name__ == "__main__":
     print("Training completed.")
     print("Training samples:", len(X_train))
     print("Testing samples:", len(X_test))
+
+    y_pred = pipeline.predict(X_test)
+    y_probability = pipeline.predict_proba(X_test)[:, 1]
+
+    print("\nConfusion matrix:")
+    print(confusion_matrix(y_test, y_pred))
+
+    print("\nAccuracy:")
+    print(f"{accuracy_score(y_test, y_pred):.4f}")
+
+    print("\nPrecision:")
+    print(f"{precision_score(y_test, y_pred):.4f}")
+
+    print("\nRecall:")
+    print(f"{recall_score(y_test, y_pred):.4f}")
+
+    print("\nF1-score:")
+    print(f"{f1_score(y_test, y_pred):.4f}")
+
+    print("\nROC-AUC:")
+    print(f"{roc_auc_score(y_test, y_probability):.4f}")
+
+    print("\nClassification report:")
+    print(classification_report(y_test, y_pred))

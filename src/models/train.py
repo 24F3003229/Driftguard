@@ -8,6 +8,7 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
+import joblib
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -111,6 +112,9 @@ if __name__ == "__main__":
     pipeline = build_pipeline()
 
     pipeline.fit(X_train, y_train)
+
+    joblib.dump(pipeline, "artifacts/baseline_model.joblib")
+    print("Model saved to artifacts/baseline_model.joblib")
 
     print("Training completed.")
     print("Training samples:", len(X_train))

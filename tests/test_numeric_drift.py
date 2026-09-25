@@ -1,4 +1,7 @@
-from src.monitoring.numeric_drift import detect_numeric_drift
+from src.monitoring.numeric_drift import (
+    detect_numeric_drift,
+    detect_numeric_drift_for_dataframe,
+)
 
 def test_no_drift():
     reference = [20, 25, 30, 35, 40]
@@ -24,3 +27,28 @@ def test_drift():
 
     assert statistic > 0.0
     assert p_value < 0.05
+
+def test_multiple_numeric_features():
+    import pandas as pd
+
+    reference = pd.DataFrame({
+        "age": [20, 25, 30, 35, 40],
+        "balance": [100, 200, 300, 400, 500],
+    })
+
+    current = pd.DataFrame({
+        "age": [70, 75, 80, 85, 90],
+        "balance": [100,200, 300, 400, 500],
+    })
+
+    results = detect_numeric_drift_for_dataframe(
+        reference,
+        current,
+        ["age", "balance"],
+    )
+
+    assert results["age"]["statistic"] > 0.0
+    assert results["age"]["p_value"] < 0.05
+
+    assert results["balance"]["statistic"] == 0.0
+    assert results["balance"]["p_value"] == 1.0

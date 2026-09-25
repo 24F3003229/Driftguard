@@ -6,17 +6,53 @@ def detect_numeric_drift(reference, current):
 
     return statistic, p_value
 
+def detect_numeric_drift_for_dataframe(
+        reference_df,
+        current_df,
+        numeric_columns,
+):
+    results = {}
+
+    for column in numeric_columns:
+        statistic, p_value = detect_numeric_drift(
+            reference_df[column],
+            current_df[column],
+        )
+
+        results[column] = {
+            "statistic": statistic,
+            "p_value": p_value,
+        }
+
+    return results
+
 if __name__ == "__main__":
     df = pd.read_csv("data/bank-full.csv", sep=";")
 
-    reference = df["age"]
-    current = df["age"]
+    numeric_columns = [
+        "age",
+        "balance",
+        "day",
+        "duration",
+        "campaign",
+        "pdays",
+        "previous",
+    ]
 
-    statistic, p_value = detect_numeric_drift(
-        reference,
-        current
+    reference_df = df.copy()
+
+    current_df = df.copy()
+    current_df["age"] += 5
+
+    results = detect_numeric_drift_for_dataframe(
+        reference_df,
+        current_df,
+        numeric_columns,
     )
 
-    print("Feature: age")
-    print("KS statistics:", statistic)
-    print("p-value:", p_value)
+    for column, result in results.items():
+        print(
+            column,
+            "KS statistic:", result["statistic"],
+            "p-value:", result["p_value"],
+        )

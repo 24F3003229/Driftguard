@@ -1,6 +1,7 @@
 from src.monitoring.numeric_drift import (
     detect_numeric_drift,
     detect_numeric_drift_for_dataframe,
+    is_numeric_drifted,
 )
 
 def test_no_drift():
@@ -52,3 +53,10 @@ def test_multiple_numeric_features():
 
     assert results["balance"]["statistic"] == 0.0
     assert results["balance"]["p_value"] == 1.0
+
+def test_drift_decision():
+    assert is_numeric_drifted(0.01) is True
+    assert is_numeric_drifted(0.10) is False
+
+def test_drift_decision_boundary():
+    assert is_numeric_drifted(0.05) is False

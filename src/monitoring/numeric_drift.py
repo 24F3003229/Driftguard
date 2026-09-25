@@ -6,6 +6,9 @@ def detect_numeric_drift(reference, current):
 
     return statistic, p_value
 
+def is_numeric_drifted(p_value, significance_level=0.05):
+    return p_value < significance_level
+
 def detect_numeric_drift_for_dataframe(
         reference_df,
         current_df,
@@ -22,6 +25,7 @@ def detect_numeric_drift_for_dataframe(
         results[column] = {
             "statistic": statistic,
             "p_value": p_value,
+            "drift_detected": is_numeric_drifted(p_value),
         }
 
     return results
@@ -55,4 +59,5 @@ if __name__ == "__main__":
             column,
             "KS statistic:", result["statistic"],
             "p-value:", result["p_value"],
+            "drift_detected:", result["drift_detected"],
         )

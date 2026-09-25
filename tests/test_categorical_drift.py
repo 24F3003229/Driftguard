@@ -1,4 +1,7 @@
-from src.monitoring.categorical_drift import detect_categorical_drift
+from src.monitoring.categorical_drift import (
+    detect_categorical_drift,
+    is_categorical_drifted,
+)
 
 def test_no_categorical_drift():
     reference = ["A", "B", "A", "B", "C"]
@@ -42,3 +45,10 @@ def test_new_category_in_current_data():
 
     assert statistic > 0.0
     assert p_value < 0.05
+
+def test_categorical_drift_decision():
+    assert is_categorical_drifted(0.01) is True
+    assert is_categorical_drifted(0.10) is False
+
+def test_categorical_drift_boundary():
+    assert is_categorical_drifted(0.05) is False

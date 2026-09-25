@@ -30,6 +30,14 @@ def detect_categorical_drift(reference, current):
     statistic, p_value, _, _ = chi2_contingency(table)
 
     return statistic, p_value
+
+def is_categorical_drifted(
+        p_value,
+        significance_level=0.05,
+):
+    return bool(
+        p_value < significance_level
+    )
     
 
 if __name__ == "__main__":

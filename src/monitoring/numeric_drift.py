@@ -6,8 +6,16 @@ def detect_numeric_drift(reference, current):
 
     return statistic, p_value
 
-def is_numeric_drifted(p_value, significance_level=0.05):
-    return p_value < significance_level
+def is_numeric_drifted(
+        statistic,
+        p_value,
+        significance_level=0.05,
+        effect_threshold=0.05,
+):
+    return bool(
+        p_value < significance_level
+        and statistic >= effect_threshold
+    )
 
 def detect_numeric_drift_for_dataframe(
         reference_df,
@@ -25,7 +33,10 @@ def detect_numeric_drift_for_dataframe(
         results[column] = {
             "statistic": statistic,
             "p_value": p_value,
-            "drift_detected": is_numeric_drifted(p_value),
+            "drift_detected": is_numeric_drifted(
+                statistic,
+                p_value,
+            ),
         }
 
     return results
@@ -46,7 +57,6 @@ if __name__ == "__main__":
     reference_df = df.copy()
 
     current_df = df.copy()
-    current_df["age"] += 5
 
     results = detect_numeric_drift_for_dataframe(
         reference_df,

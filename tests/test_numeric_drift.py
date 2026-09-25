@@ -55,8 +55,39 @@ def test_multiple_numeric_features():
     assert results["balance"]["p_value"] == 1.0
 
 def test_drift_decision():
-    assert is_numeric_drifted(0.01) is True
-    assert is_numeric_drifted(0.10) is False
+    assert is_numeric_drifted(
+        statistic=0.10,
+        p_value=0.01,
+    ) is True
+
+    assert is_numeric_drifted(
+        statistic=0.02,
+        p_value=0.01
+    ) is False
+
+    assert is_numeric_drifted(
+        statistic=0.10,
+        p_value=0.10,
+    ) is False
 
 def test_drift_decision_boundary():
-    assert is_numeric_drifted(0.05) is False
+    assert is_numeric_drifted(
+        statistic=0.05,
+        p_value=0.05,
+    ) is False
+
+def test_drift_magnitude():
+    assert is_numeric_drifted(
+        statistic=0.01,
+        p_value=0.001,
+    ) is False
+
+    assert is_numeric_drifted(
+        statistic=0.05,
+        p_value=0.001,
+    ) is True
+
+    assert is_numeric_drifted(
+        statistic=0.10,
+        p_value=0.001,
+    ) is True

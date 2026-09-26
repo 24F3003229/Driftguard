@@ -261,7 +261,7 @@ def test_generate_drift_report_recommends_retraining_evaluation():
         "campaign": [1] * 50 + [2] * 50,
     })
 
-    # current dataset reference dataset ki copy hai.
+    # current dataset reference dataset se kr rhe copy hai.
     current_df = reference_df.copy()
 
     # sbhi 4 features me intentional distribution changes
@@ -284,3 +284,49 @@ def test_generate_drift_report_recommends_retraining_evaluation():
     # 4/4 = 100% drift ratio hai.
     # isliye retraining ko evaluate krne a action recommend hona chahiye.
     assert report["summary"]["action"] == "evaluate_retraining"
+
+# ye test verify krta hai ki retraining review ratio
+# unified drift report ke action decision ko control krta hai.
+def test_retraining_review_ratio_changes_action():
+    # reference dataset me 4 monitored features definekr rhe hai
+    reference_df = pd.DataFrame({
+        "age": [20] * 50 + [21] * 50,
+        "balance": [100] * 50 + [101] * 50,
+        "day": [1] * 50 + [2] * 50,
+        "campaign": [1] * 50 + [2] * 50,
+    })
+
+    # current dataset reference dataset se copy kr rhe hai.
+    current_df = reference_df.copy()
+
+    # sirf 1 feature me distribution change kr rhe hai.
+    current_df["age"] = [40] * 50 + [41] * 50
+
+    # default ratio 0.5 use kr rhe hai.
+    # 1 out of 4 features drifted = 25%.
+    # 25% < 50%, isliye action investigate hona chahiye.
+    report = generate_drift_report(
+        reference_df,
+        current_df,
+        ["age", "balance", "day", "campaign"],
+        [],
+        retraining_review_ratio=0.5,
+    )
+
+    assert report["summary"]["action"] == "investigate"
+
+    # ab review ratio ko 0.25 kr rha hai
+    # 25% drift ab threshold ke equal hai.
+    # isliye evalute_retraining action hona chahiye.
+    strict_report = generate_drift_report(
+        reference_df,
+        current_df, 
+        ["age", "balance", "day", "campaign"],
+        [],
+        retraining_review_ratio=0.25,
+    )
+
+    assert strict_report["summary"]["action"] == "evaluate_retraining"
+
+    # Report mein actual configuration bhi store honi chahiye.
+    assert strict_report["configuration"]["retraining_review_ratio"] == 0.25

@@ -37,9 +37,10 @@ def determine_drift_action(
     # limited drift ke case me pehle investigation krenge.
     return "investigate"
 
-# ye funciton reference or current data ke drift results ko ek single unified report mein combine karega.
-# thresholds ko parameter ke through receive karega taaki 
-# monitoring decision clearly configurable or reproducible rhe.
+# ye funciton reference or current data ke drift results ko
+# ek single unified report mein combine karega.
+# sare monitoring thresholds ko parameters ke through receive honge
+# taki monitoring decision configurable or reproducible rhe.
 def generate_drift_report(
         reference_df,
         current_df,
@@ -48,6 +49,7 @@ def generate_drift_report(
         numeric_significance_level=0.05,
         numeric_effect_threshold=0.05,
         categorical_significance_level=0.05,
+        retraining_review_ratio=0.5
 ):
 
     # reference dataset me ktine observations hai, 
@@ -100,9 +102,12 @@ def generate_drift_report(
 
     # drifted features ki quantity or total monitored features
     # ke basis pr next monitoring action decide kar rhe hai.
+    # retraining_review_ratio se hum control krte hai ki 
+    # kitne proportion pr retraining evaluation recommend hogi
     action = determine_drift_action(
         drifted_features=drifted_features,
         total_features=total_features,
+        retraining_review_ratio=retraining_review_ratio,
     )
 
     # report me vo exact thresholds bhi store kr rhe hai
@@ -123,6 +128,7 @@ def generate_drift_report(
             "numeric_significance_level": numeric_significance_level,
             "numeric_effect_threshold": numeric_effect_threshold,
             "categorical_significance_level": categorical_significance_level,
+            "retraining_review_ratio": retraining_review_ratio,
         },
         "numeric": numeric_results,
         "categorical": categorical_results,

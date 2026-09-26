@@ -1,0 +1,27 @@
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Pytest cache
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+
+# Local dataset
+data/
+
+# Generated model artifacts
+artifacts/
+
+# Generated reports
+reports/
+
+# VS Code settings
+.vscode/

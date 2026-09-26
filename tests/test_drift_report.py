@@ -48,6 +48,18 @@ def test_generate_drift_report():
     assert report["metadata"]["reference_samples"] == 100
     assert report["metadata"]["current_samples"] == 100
 
+    # report me numeric significance threshold ka configured value
+    # correctly store hona chahiye.
+    assert report["configuration"]["numeric_significance_level"] == 0.05
+
+    # Numeric drift ke liye configured effect threshold
+    # correctly store hona chahiye.
+    assert report["configuration"]["numeric_effect_threshold"] == 0.05
+
+    # categorical drift ke liye configured significance threshold 
+    # correctly store hona chahiye.
+    assert report["configuration"]["categorical_significance_level"] == 0.05
+
 # ye test check krta hai ki joab reference or current data same ho,
 # to unified report correctly "no drift" report kre.
 def test_generate_drift_report_no_drift():
@@ -83,3 +95,85 @@ def test_generate_drift_report_no_drift():
 
     # individual categorical feature bhi no-drifted hoan chahiye.
     assert report["categorical"]["job"]["drift_detected"] is False
+
+
+# ye test verify krta hai ki numeric effect threshold
+# actually drift decision ko control kr rha hai.
+def test_numeric_threshold_changes_drift_decision():
+    # reference data ki age distribution define kr rhe hai.
+    reference_df = pd.DataFrame({
+        "age": [20] * 50 + [21] * 50,
+    })
+
+    # current data me age distribution intentionally change hai.
+    # isse KS statistic 0 or 1 ke bich rhega.
+    current_df = pd.DataFrame({
+        "age": [20] * 50 + [22] * 50,
+    })
+
+    # low effect threshold ke saath drift detect hona chahiye.
+    report = generate_drift_report(
+        reference_df,
+        current_df,
+        ["age"],
+        [],
+        numeric_effect_threshold=0.05,
+    )
+
+    # KS statistic 0.05 se greater hai,
+    # isliye drift detect hona chahiye.
+    assert report["numeric"]["age"]["drift_detected"] is True
+
+    # Ab effect threshold ko 0.99 kr rhe hai.
+    # isliye threshold actual KS statistic se bohut high hai.
+    strict_report = generate_drift_report(
+        reference_df,
+        current_df,
+        ["age"],
+        [],
+        numeric_effect_threshold=0.99,
+    )
+
+    # same data hone ke bawajood strict threshold ke kaaran
+    # drift decision False hona chahiye.
+    assert strict_report["numeric"]["age"]["drift_detected"] is False
+
+
+# ye test verify krta hai ki categorical significance threshold
+# actual drift decision lo control kr rha hai.
+def test_categorical_threshold_changes_drift_decision():
+    # reference data me A or B categories ka distribution almost balanced rkhta hai.
+    reference_df = pd.DataFrame({
+        "job": ["A"] * 50 + ["B"] * 50,
+    })
+
+    # current data me category distribution intentionally change kr rhe hai
+    current_df = pd.DataFrame({
+        "job": ["A"] * 20 + ["B"] * 80,
+    })
+
+    # normal significance level 0.05 le sath drift detect hona chahiye
+    report = generate_drift_report(
+        reference_df,
+        current_df,
+        [],
+        ["job"],
+        categorical_significance_level=0.05,
+    )
+
+    # p-value 0.05 se smaller hone pr categorical drift detect hoga
+    assert report["categorical"]["job"]["drift_detected"] is True
+
+    # ab significance level ko bahut small kr rhe hai.
+    # isse drift detect krne ki condition much stricter ho jayegi.
+    strict_report = generate_drift_report(
+        reference_df,
+        current_df,
+        [],
+        ["job"],
+        categorical_significance_level=1e-100,
+    )
+
+    # same data hone ke bawajood strict significance threshold ke 
+    # kaaran drift decision False hona chahiye.
+    assert strict_report["categorical"]["job"]["drift_detected"] is False

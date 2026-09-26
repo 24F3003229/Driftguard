@@ -17,10 +17,15 @@ def is_numeric_drifted(
         and statistic >= effect_threshold
     )
 
+# ye function selected numeric features pr 
+# KS test run krta hai or har feature ke lie
+# drfit statistic, p-value or final drift decision return krta hai.
 def detect_numeric_drift_for_dataframe(
         reference_df,
         current_df,
         numeric_columns,
+        significance_level=0.05,
+        effect_threshold=0.05,
 ):
     results = {}
 
@@ -33,9 +38,14 @@ def detect_numeric_drift_for_dataframe(
         results[column] = {
             "statistic": statistic,
             "p_value": p_value,
+
+            # configured significance or effect thresholds use krke
+            # final numeric drift decision calculate kr rhe hai.
             "drift_detected": is_numeric_drifted(
                 statistic,
                 p_value,
+                significance_level=significance_level,
+                effect_threshold=effect_threshold,
             ),
         }
 

@@ -11,13 +11,17 @@ from src.monitoring.categorical_drift import (
 
 
 
-# ye funciton reference or current data ko lekar numeric or categorical features
-# ka drift analysis ek single unified report mein combine karega
+# ye funciton reference or current data ke drift results ko ek single unified report mein combine karega.
+# thresholds ko parameter ke through receive karega taaki 
+# monitoring decision clearly configurable or reproducible rhe.
 def generate_drift_report(
         reference_df,
         current_df,
         numeric_columns,
         categorical_columns,
+        numeric_significance_level=0.05,
+        numeric_effect_threshold=0.05,
+        categorical_significance_level=0.05,
 ):
 
     # reference dataset me ktine observations hai, 
@@ -28,20 +32,23 @@ def generate_drift_report(
     # uska count report me store kr rhe hai.
     current_samples = len(current_df)
     
-    # Numeric features par already-tested KS drift detector run kar rahe hai.
-    # Isse har numeric column ka statistic, p-value or drift decision milega.
+    # Numeric drift detector ko configured thresholds pass kr kre hai 
+    # taaki report or actual decision same configuration use kre.
     numeric_results = detect_numeric_drift_for_dataframe(
         reference_df,
         current_df,
         numeric_columns,
+        significance_level=numeric_significance_level,
+        effect_threshold=numeric_effect_threshold,
     )
 
-    # categorical features pr Chi-square based drift detection run kar rhe hai,
-    # har categorical feature ka statistic, p-value or drift decision milega.
+    # report se categorical significance threshold detector ko
+    # pass kr rhe hai, taaki actual decision isi value pr based ho.
     categorical_results = detect_categorical_drift_for_dataframe(
         reference_df,
         current_df,
         categorical_columns,
+        significance_level=categorical_significance_level,
     )
 
     # numeric or categorical dono results ko ek jagah combine kr rhe hai
@@ -65,7 +72,9 @@ def generate_drift_report(
     # agr ek bhi feature drifted hai, to overall drift status True hoga.
     overall_drift = drifted_features > 0 
 
-    # final report me summary, dataset size or detailed feature-level preserve kr rhe hai.
+    # report me vo exact thresholds bhi store kr rhe hai
+    # jo drift decision lene ke liye use hue hai.
+    # isse report reproducible or easy-to-audit banegi.
     return {
         "summary": {
             "total_features": total_features,
@@ -75,6 +84,11 @@ def generate_drift_report(
         "metadata": {
             "reference_samples": reference_samples,
             "current_samples": current_samples,
+        },
+        "configuration":{
+            "numeric_significance_level": numeric_significance_level,
+            "numeric_effect_threshold": numeric_effect_threshold,
+            "categorical_significance_level": categorical_significance_level,
         },
         "numeric": numeric_results,
         "categorical": categorical_results,

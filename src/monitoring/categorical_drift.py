@@ -39,10 +39,15 @@ def is_categorical_drifted(
         p_value < significance_level
     )
 
+# ye function DataFrame ke selected categorical columns pr
+# Chi-square test run krega.
+# significance_level parameter se hum decide kr sakte hai
+# ki kitne p-value pr categorical drift report karna hai.
 def detect_categorical_drift_for_dataframe(
         reference_df,
         current_df,
         categorical_columns,
+        significance_level=0.05,
 ):
     results = {}
 
@@ -55,8 +60,12 @@ def detect_categorical_drift_for_dataframe(
         results[column] = {
             "statistic": statistic,
             "p_value": p_value,
+
+            # har categorical feature ka p-value configured threshold
+            # ke against check karke final drift decision le rhe hai.
             "drift_detected": is_categorical_drifted(
                 p_value,
+                significance_level=significance_level,
             ),
         }
 

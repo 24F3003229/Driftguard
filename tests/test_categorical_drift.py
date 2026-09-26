@@ -1,6 +1,8 @@
+import pandas as pd
 from src.monitoring.categorical_drift import (
     detect_categorical_drift,
     is_categorical_drifted,
+    detect_categorical_drift_for_dataframe,
 )
 
 def test_no_categorical_drift():
@@ -52,3 +54,23 @@ def test_categorical_drift_decision():
 
 def test_categorical_drift_boundary():
     assert is_categorical_drifted(0.05) is False
+
+def test_categorical_drift_for_dataframe():
+    reference_df = pd.DataFrame({
+        "job": ["A"] * 500 + ["B"] * 500,
+        "marital": ["X"] * 500 + ["Y"] * 500,
+    })
+
+    current_df = pd.DataFrame({
+        "job": ["A"] * 200 + ["B"] * 800,
+        "marital": ["X"] * 500 + ["Y"] * 500,
+    })
+
+    results = detect_categorical_drift_for_dataframe(
+        reference_df,
+        current_df,
+        ["job", "marital"],
+    )
+
+    assert results["job"]["drift_detected"] is True
+    assert results["marital"]["drift_detected"] is False

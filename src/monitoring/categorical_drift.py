@@ -38,21 +38,58 @@ def is_categorical_drifted(
     return bool(
         p_value < significance_level
     )
+
+def detect_categorical_drift_for_dataframe(
+        reference_df,
+        current_df,
+        categorical_columns,
+):
+    results = {}
+
+    for column in categorical_columns:
+        statistic, p_value = detect_categorical_drift(
+            reference_df[column],
+            current_df[column],
+        )
+
+        results[column] = {
+            "statistic": statistic,
+            "p_value": p_value,
+            "drift_detected": is_categorical_drifted(
+                p_value,
+            ),
+        }
+
+    return results
     
 
 if __name__ == "__main__":
     df = pd.read_csv("data/bank-full.csv", sep=";")
 
-    reference = df["job"]
-    current = df["job"].replace({
-        "blue-collar": "management",
-    })
+    categorical_columns = [
+        "job",
+        "marital",
+        "education",
+        "default",
+        "housing",
+        "loan",
+        "contact",
+        "month",
+        "poutcome",
+    ]
 
-    statistic, p_value = detect_categorical_drift(
-        reference,
-        current,
+    reference_df = df.copy()
+
+    current_df = df.copy()
+
+    results = detect_categorical_drift_for_dataframe(
+        reference_df,
+        current_df,
+        categorical_columns,
     )
 
-    print("Featues: job")
-    print("Chi-square statistic:", statistic)
-    print("p-value:", p_value)
+    for column, result in results.items():
+        print(f"\nFeature: {column}")
+        print("Chi-square statistic:", result["statistic"])
+        print("p-value:", result["p_value"])
+        print("Drift detected:", result["drift_detected"])

@@ -43,6 +43,10 @@ def test_generate_drift_report():
     # kam se kam ek features drifted hone pr overall drifted status True hona chahiye.
     assert report["summary"]["overall_drift"] is True
 
+    # reference or current datasets dono me 100 rowshai,
+    # isliye report me dono sample sizes 100 hone chahiye.
+    assert report["metadata"]["reference_samples"] == 100
+    assert report["metadata"]["current_samples"] == 100
 
 # ye test check krta hai ki joab reference or current data same ho,
 # to unified report correctly "no drift" report kre.

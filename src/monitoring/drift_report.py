@@ -19,6 +19,15 @@ def generate_drift_report(
         numeric_columns,
         categorical_columns,
 ):
+
+    # reference dataset me ktine observations hai, 
+    # uska count report me store kr rhe hai.
+    reference_samples = len(reference_df)
+
+    # current dataset me kitne observations hai,
+    # uska count report me store kr rhe hai.
+    current_samples = len(current_df)
+    
     # Numeric features par already-tested KS drift detector run kar rahe hai.
     # Isse har numeric column ka statistic, p-value or drift decision milega.
     numeric_results = detect_numeric_drift_for_dataframe(
@@ -56,12 +65,16 @@ def generate_drift_report(
     # agr ek bhi feature drifted hai, to overall drift status True hoga.
     overall_drift = drifted_features > 0 
 
-    # final report me summary ke sath detailed numeric or categorical bhi preserve kr rhe hai.
+    # final report me summary, dataset size or detailed feature-level preserve kr rhe hai.
     return {
         "summary": {
             "total_features": total_features,
             "drifted_features": drifted_features,
             "overall_drift": overall_drift,
+        },
+        "metadata": {
+            "reference_samples": reference_samples,
+            "current_samples": current_samples,
         },
         "numeric": numeric_results,
         "categorical": categorical_results,

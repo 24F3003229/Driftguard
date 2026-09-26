@@ -35,9 +35,34 @@ def generate_drift_report(
         categorical_columns,
     )
 
-    # numeric or categorical dono ke results ko
-    # ek single unified dictionary mein combine kr rhe hai.
+    # numeric or categorical dono results ko ek jagah combine kr rhe hai
+    # taki total monitored features count kr ske.
+    all_results = {
+        **numeric_results,
+        **categorical_results,
+    }
+
+
+    # har feature ke result me drift_detected True/False hota hai
+    # sirf True wale features ko count kr kre hai.
+    drifted_features = sum(
+        result["drift_detected"]
+        for result in all_results.values()
+    )
+
+    # total monitored features numeric + categorical features ka count hai.
+    total_features = len(all_results)
+
+    # agr ek bhi feature drifted hai, to overall drift status True hoga.
+    overall_drift = drifted_features > 0 
+
+    # final report me summary ke sath detailed numeric or categorical bhi preserve kr rhe hai.
     return {
+        "summary": {
+            "total_features": total_features,
+            "drifted_features": drifted_features,
+            "overall_drift": overall_drift,
+        },
         "numeric": numeric_results,
         "categorical": categorical_results,
     }
@@ -75,7 +100,7 @@ if __name__ == "__main__":
         "poutcome",
     ]
 
-    # reference data hmara baseline hai, isliye hum is data ko change nnhi krenge
+    # reference data hmara baseline hai, isliye hum is data ko change nhi krenge
     reference_df = df.copy()
 
     # current data abhi reference ke same rakha hai,

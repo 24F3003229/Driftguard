@@ -10,6 +10,32 @@ from src.monitoring.categorical_drift import (
 )
 
 
+# ye function drifted features ki quantity ke basis pr 
+# monitoring system ke liye next action decide krega.
+
+# IMPORTANT:
+# drift detect hone ka matlab automatically model retrain nhi krna hai
+# pehle investigation or model performance evaluation krna hoga.
+def determine_drift_action(
+        drifted_features,
+        total_features,
+        retraining_review_ratio=0.5,
+):
+    # agr koi bhi feature drift nhi hua,
+    # to immediate action ki zrurat nhi hai.
+    if drifted_features == 0:
+        return "no_action"
+
+    # drifted features ka proportion calculate kar rhe hai.
+    drift_ratio = drifted_features / total_features
+
+    # agr monitored features ka sufficiently large portion drifted hai,
+    # to retraining ko evaluate krne ka signal denge.
+    if drift_ratio >= retraining_review_ratio:
+        return "evaluate_retraining"
+
+    # limited drift ke case me pehle investigation krenge.
+    return "investigate"
 
 # ye funciton reference or current data ke drift results ko ek single unified report mein combine karega.
 # thresholds ko parameter ke through receive karega taaki 
@@ -72,6 +98,13 @@ def generate_drift_report(
     # agr ek bhi feature drifted hai, to overall drift status True hoga.
     overall_drift = drifted_features > 0 
 
+    # drifted features ki quantity or total monitored features
+    # ke basis pr next monitoring action decide kar rhe hai.
+    action = determine_drift_action(
+        drifted_features=drifted_features,
+        total_features=total_features,
+    )
+
     # report me vo exact thresholds bhi store kr rhe hai
     # jo drift decision lene ke liye use hue hai.
     # isse report reproducible or easy-to-audit banegi.
@@ -80,6 +113,7 @@ def generate_drift_report(
             "total_features": total_features,
             "drifted_features": drifted_features,
             "overall_drift": overall_drift,
+            "action": action,
         },
         "metadata": {
             "reference_samples": reference_samples,

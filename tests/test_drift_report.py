@@ -1,6 +1,9 @@
 import pandas as pd
 
-from src.monitoring.drift_report import generate_drift_report
+from src.monitoring.drift_report import (
+    generate_drift_report,
+    determine_drift_action,
+)
 
 
 # ye test check krta hia ki unified report numeric or categorical dono ka drift
@@ -177,3 +180,107 @@ def test_categorical_threshold_changes_drift_decision():
     # same data hone ke bawajood strict significance threshold ke 
     # kaaran drift decision False hona chahiye.
     assert strict_report["categorical"]["job"]["drift_detected"] is False
+
+# ye test verify krta hai ki jab koi feature drift nhi krta,
+# system no_action recommendation deta hai.
+def test_determine_drift_action_no_drift():
+    # koi feature drift nhi hua hai.
+    action = determine_drift_action(
+        drifted_features=0,
+        total_features=10,
+    )
+
+    # expected action no_action hona chahiye
+    assert action == "no_action"
+
+# ye test verify krta hai ki limited drift ke case me 
+# system investigate recommend karta hai.
+def test_determine_drift_action_investigate():
+    # 2 out of 10 features drifted hai.
+    # drift ratio = 20%, jo 50% threshold se kam hai,
+    action = determine_drift_action(
+        drifted_features=2,
+        total_features=10,
+    )
+
+    # limited drift ke case me investigate krni chahiye.
+    assert action == "investigate"
+
+# ye test verify krta hai ki widespread drift ke case me 
+# system retraining evaluation recommend krta hai.
+def test_determine_drift_action_retraining_review():
+    # 5 out of 10 features drifted hai.
+    # drift ratio = 50%.
+    action = determine_drift_action(
+        drifted_features=5,
+        total_features=10,
+    )
+
+    # 50% threshold cross hone pr retraining evaluate krenge.
+    assert action == "evaluate_retraining"
+
+# ye test verify krta hai ki unified drift report 
+# action recommendation ko summary ke andar include kr rhe hai.
+def test_generate_drift_report_includes_action():
+    # reference data me 4 monitored features define kr rhe hai.
+    reference_df = pd.DataFrame({
+        "age": [20] * 50 + [21] * 50,
+        "balance": [100] * 50 + [101] * 50,
+        "day": [1] * 50 + [2] * 50,
+        "campaign": [1] * 50 + [2] * 50,
+    })
+
+    # sirf age distribution intentionally change hai.
+    # baki features same hai
+    current_df = reference_df.copy()
+    current_df["age"] = [40] * 50 + [41] * 50
+
+    # unified drift report generate kr rhe hai
+    report = generate_drift_report(
+        reference_df,
+        current_df, 
+        ["age", "balance", "day", "campaign"],
+        [],
+    )
+
+    # 4 me se ek 1 feature drifted hai.
+    # drift ratio = 25%, jo 50% retraining-review threshold se kam hai.
+    assert report["summary"]["drifted_features"] == 1
+
+    # isliye drifted action investigate hona chahiye.
+    assert report["summary"]["action"] == "investigate"
+
+# ye test verify krta hai ki widespread drift hone pr
+# unified report evaluate_retraining action return krta hai.
+def test_generate_drift_report_recommends_retraining_evaluation():
+    # reference dataset me 4 monitored numeric features define kr rhe hai.
+    reference_df = pd.DataFrame({
+        "age": [20] * 50 + [21] * 50,
+        "balance": [100] * 50 + [101] * 50,
+        "day": [1] * 50 + [2] * 50,
+        "campaign": [1] * 50 + [2] * 50,
+    })
+
+    # current dataset reference dataset ki copy hai.
+    current_df = reference_df.copy()
+
+    # sbhi 4 features me intentional distribution changes
+    current_df["age"] = [40] * 50 + [41] * 50
+    current_df["balance"] = [500] * 50 + [501] * 50
+    current_df["day"] = [10] * 50 + [11] * 50
+    current_df["campaign"] = [5] * 50 + [6] * 50
+
+    # unified drift report generate kr rhe hai.
+    report = generate_drift_report(
+        reference_df,
+        current_df,
+        ["age", "balance", "day", "campaign"],
+        [],
+    )
+
+    # sabhi 4 monitored features drifted hone chahiye.
+    assert report["summary"]["drifted_features"] == 4
+
+    # 4/4 = 100% drift ratio hai.
+    # isliye retraining ko evaluate krne a action recommend hona chahiye.
+    assert report["summary"]["action"] == "evaluate_retraining"

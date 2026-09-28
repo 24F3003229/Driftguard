@@ -1,3 +1,7 @@
+# report generation ka current UTC timestamp create krne ke liye
+# standard library ka datetime module use kr rhe hai
+from datetime import datetime, timezone
+
 # Existing drift report function ko import kr rhe hai.
 # ye data drift ka complete report generate krega
 from src.monitoring.drift_report import (
@@ -73,9 +77,16 @@ def generate_monitoring_report(
         overall_performance_degraded=overall_performance_degraded,
     )
 
+    # unified monitoring report generate hone ka exact UTC timestamp
+    # record kr rhe hai.
+    report_generated_at = datetime.now(timezone.utc).isoformat()
+
     # drift report, performance report pr final decision ko
     # ek single structured monitoring report me combine kr rhe hai.
     return {
+        "metadata": {
+            "report_generated_at": report_generated_at,
+        },
         "drift": drift_report,
         "performance":performance_report,
         "decision": {

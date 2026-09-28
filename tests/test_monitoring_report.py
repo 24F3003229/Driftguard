@@ -39,7 +39,7 @@ def test_generate_monitoring_report():
         "roc_auc": 0.88,
     }
 
-    # unified monitoring repot generate kr rhe hai.
+    # unified monitoring report generate kr rhe hai.
     report = generate_monitoring_report(
         reference_df,
         current_df,
@@ -48,6 +48,15 @@ def test_generate_monitoring_report():
         reference_metrics,
         current_metrics,
     )
+
+    # unified report me metadata section available hona chahiye.
+    assert "metadata" in report
+
+    # report generation timestamp metadata me available hona chahiye
+    assert "report_generated_at" in report["metadata"]
+
+    # timestamp empty nhi hona chahiye.
+    assert report["metadata"]["report_generated_at"]
 
     # age me drift detect hona chahiye.
     assert report["drift"]["summary"]["drifted_features"] == 1

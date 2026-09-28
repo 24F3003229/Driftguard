@@ -24,6 +24,9 @@ from src.monitoring.monitoring_decision import (
 # ye function data drift or model performance reports ko 
 # ke single unified monitoring report me combine krega.
 #
+# model_version aur reference_dataset metadata ke through
+# monitoring run ko traceable banaya ja raha hai.
+#
 #IS FUNCTION KA MAIN PURPOSE ORCHESTRATION HAI:
 # 1. Drift report generate krna
 # 2. Performance report generate krna
@@ -36,6 +39,8 @@ def generate_monitoring_report(
         categorical_columns,
         reference_metrics,
         current_metrics,
+        model_version="baseline",
+        reference_dataset="bank-full.csv",
         numeric_significance_level=0.05,
         numeric_effect_threshold=0.05,
         categorical_significance_level=0.05,
@@ -86,6 +91,8 @@ def generate_monitoring_report(
     return {
         "metadata": {
             "report_generated_at": report_generated_at,
+            "model_version": model_version,
+            "reference_dataset": reference_dataset,
         },
         "drift": drift_report,
         "performance":performance_report,

@@ -58,6 +58,12 @@ def test_generate_monitoring_report():
     # timestamp empty nhi hona chahiye.
     assert report["metadata"]["report_generated_at"]
 
+    # report me baseline model ka verison record hona chahiye.
+    assert report["metadata"]["model_version"] == "baseline"
+
+    # report me reference dataset ka naam record hona chahiye.
+    assert report["metadata"]["reference_dataset"] == "bank-full.csv"
+
     # age me drift detect hona chahiye.
     assert report["drift"]["summary"]["drifted_features"] == 1
 
@@ -167,3 +173,42 @@ def test_generate_monitoring_report_investigate():
     # sirf ek monitoring signal present hone ki vjah se
     # investigation honi chahiye.
     assert report["decision"]["action"] == "investigate"
+
+# ye test verify krta hai ki custom model version or
+# reference dataset report metadata me correctly store hote hai.
+def test_generate_monitoring_report_custom_metadata():
+    # reference dataset create kr rhe hai.
+    reference_df = pd.DataFrame({
+    "age": [20, 21, 22, 23],
+    })
+
+    # current dataset same rakhenge taaki drift na ho.
+    current_df = reference_df.copy()
+
+    # reference model metrics define kr rhe hai.
+    reference_metrics = {
+        "accuracy": 0.90,
+    }
+
+    # current model metrics same rkhenge
+    current_metrics = reference_metrics.copy()
+
+    # custom model version or dataset identifier pass kr rhe hai.
+    report = generate_monitoring_report(
+        reference_df,
+        current_df,
+        ["age"],
+        [],
+        reference_metrics,
+        current_metrics,
+        model_version="v2",
+        reference_dataset="reference_2026_09",
+    )
+
+    # custom model version metadata me correctly store hona chahiye.
+    assert report["metadata"]["model_version"] == "v2"
+
+    # custom reference dataset identifier correctly store hona chahiye.
+    assert (
+        report["metadata"]["reference_dataset"] == "reference_2026_09"
+    )

@@ -1,4 +1,5 @@
 import json
+import os
 from src.monitoring.report_storage import (
     save_monitoring_report,
     load_monitoring_report,
@@ -86,8 +87,15 @@ def test_load_latest_monitoring_report(tmp_path):
     first_path = tmp_path / "monitoring_report_1.json"
     latest_path = tmp_path / "monitoring_report_2.json"
 
+    # dono reports ko save kr rhe hai.
     save_monitoring_report(first_report, first_path)
     save_monitoring_report(latest_report, latest_path)
+
+    # first report ka modification time explicitly older set kr rhe hai,
+    os.utime(first_path, (1000, 1000))
+
+    # second report ka modification time explicitly newer se kr rhe hai.
+    os.utime(latest_path, (2000, 2000))
 
     # latest report load kr rhe hai.
     loaded_report = load_latest_monitoring_report(tmp_path)

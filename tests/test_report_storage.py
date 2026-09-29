@@ -2,6 +2,7 @@ import json
 from src.monitoring.report_storage import (
     save_monitoring_report,
     load_monitoring_report,
+    load_latest_monitoring_report,
 )
 
 # ye test verify krta hai ki monitoring report
@@ -57,3 +58,39 @@ def test_load_monitoring_report(tmp_path):
 
     # loaded report original report ke equal honi chahiye
     assert loaded_report == report
+
+# ye test verify krta hai ki reports directory me 
+# latest monitoring report correctly identify ho rhi hai.
+def test_load_latest_monitoring_report(tmp_path):
+    # first monitoring report create kr rhe hai.
+    first_report = {
+        "metadata": {
+            "model_version": "baseline",
+        },
+        "decision": {
+            "action": "no_action",
+        },
+    }
+
+    # second monitoring report create kr rhe hai.
+    latest_report = {
+        "metadata": {
+            "model_version": "v2",
+        },
+        "decision": {
+            "action": "investigate",
+        },
+    }
+
+    # dono reports ko temporary directory me save kr rhe hai.
+    first_path = tmp_path / "monitoring_report_1.json"
+    latest_path = tmp_path / "monitoring_report_2.json"
+
+    save_monitoring_report(first_report, first_path)
+    save_monitoring_report(latest_report, latest_path)
+
+    # latest report load kr rhe hai.
+    loaded_report = load_latest_monitoring_report(tmp_path)
+
+    # latest saved report return honi chahiye.
+    assert loaded_report == latest_report

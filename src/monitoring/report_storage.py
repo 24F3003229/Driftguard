@@ -27,3 +27,29 @@ def load_monitoring_report(input_path):
 
     # loaded monitoring report return kr rhe hai.
     return report
+
+# ye function reports directory me available monitoring reports me se
+# sbse recently modified report ko find krke return krega.
+def load_latest_monitoring_report(reports_directory):
+    # reports directory ko Path object me convert kr rhe hai.
+    reports_directory = Path(reports_directory)
+
+    # directory me sirf JSON monitoring report files find kr rhe hai.
+    report_files = list(reports_directory.glob("*.json"))
+
+    # agr koi monitoring report available nhi hai,
+    # to clear error raise kr rhe hai.
+    if not report_files:
+        raise FileNotFoundError(
+            "No monitoring reports found."
+        )
+
+    # files ko modification time ke according sort kr rhe hai.
+    # sbse recently modified files last me hogi.
+    latest_report = max(
+        report_files,
+        key=lambda file_path: file_path.stat().st_mtime,
+    )
+
+    # latest JSON report ke load krke return kr rhe hai.
+    return load_monitoring_report(latest_report)

@@ -10,11 +10,18 @@ from src.monitoring.report_storage import (
     save_monitoring_report,
 )
 
+# unique monitoring report path generate krne ke liye
+# report path helper import kr rhe hai.
+from src.monitoring.report_path import (
+    create_report_path,
+)
+
 # ye function complete monitoring workflow ko orchestrate karega.
 #
 # 1. Monitoring report generate krega.
-# 2. Generated report ko JSON file me save krega.
-# 3. Generated report return krega.
+# 2. Report ke liye output path determine krega.
+# 3. Generated report ko JSON file me save krega.
+# 4. Generated report return krega.
 #
 #IMPORTANT:
 # ye function khud drift ya performance calculate nhi krta.
@@ -26,7 +33,7 @@ def run_monitoring_pipeline(
         categorical_columns,
         reference_metrics,
         current_metrics,
-        output_path,
+        output_path=None,
         model_version="baseline",
         reference_dataset="bank-full.csv",
         numeric_significance_level=0.05,
@@ -51,6 +58,11 @@ def run_monitoring_pipeline(
         retraining_review_ratio=retraining_review_ratio,
         degradation_threshold=degradation_threshold,
     )
+
+    # agr output path ecplicitly provide nhi kiya gaya hai,
+    # to automatically unique report path generate kr rhe hai.
+    if output_path is None:
+        output_path = create_report_path()
 
     # generated monitoring report ko JSON file me save kr rhe hai.
     save_monitoring_report(

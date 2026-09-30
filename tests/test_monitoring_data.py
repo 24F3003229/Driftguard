@@ -25,7 +25,7 @@ def test_prepare_monitoring_datasets(tmp_path):
     )
 
     # monitoring datasets prepare kr rhe hai.
-    reference_df, current_df, y_test = (
+    reference_df, reference_evaluation_df, current_df, y_test = (
         prepare_monitoring_datasets(
             data_path=data_path,
             current_age_shift=5,
@@ -35,11 +35,20 @@ def test_prepare_monitoring_datasets(tmp_path):
     # reference dataset me target column nhi hona chahiye.
     assert "y" not in reference_df.columns
 
+    # reference evaluation dataset bhi taget column caontain nhi krna chahiye.
+    assert "y" not in reference_evaluation_df.columns
+
     # current dataset me bhi target columns nhi hona chahiye.
     assert "y" not in current_df.columns
 
+    # reference or current evaluation datasets ka same shape hona chahiye.
+    assert reference_evaluation_df.shape == current_df.shape
+
     # reference or current datasets ke columns same hone chahiye.
     assert list(reference_df.columns)  == list(current_df.columns)
+
+    # donno datasets ke same features hone chahiye.
+    assert list(reference_evaluation_df.columns) == list(current_df.columns)
 
     # test labels return hone chahiye.
     assert len(y_test) == len(current_df)
@@ -47,3 +56,8 @@ def test_prepare_monitoring_datasets(tmp_path):
     # current age values reference/test source ke comparision me
     # 5 units shift honi chahiye.
     assert current_df["age"].min() >= 30
+
+    # current dataset me simulated age shift apply hua hona chahiye.
+    assert (
+        current_df["age"] == reference_evaluation_df["age"] + 5
+    ).all()

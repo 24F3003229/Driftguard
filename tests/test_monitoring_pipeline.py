@@ -113,3 +113,60 @@ def test_run_monitoring_pipeline_with_automatic_path(
 
     # pipeline se returned report no_action honi chahiye.
     assert report["decision"]["action"] == "no_action"
+
+# ye integration test verify krta hai ki agr data drift detect ho
+# lekin model performance degrade na ho, to action "investigate" ho.
+def test_run_monitoring_pipeline_with_drift_but_stable_performance(tmp_path):
+    # reference dataset define kr rhe hai.
+    reference_df = pd.DataFrame({
+        "age": [20] * 100,
+        "balance": [100] * 100,
+    })
+
+    # current dataset me age distribution intentionally change kr rhe hai.
+    # isse numeric drift detect honi chaiye.
+    current_df = pd.DataFrame({
+        "age": [30] * 100,
+        "balance": [100] * 100,
+    })
+
+    # reference model performance define kr rhe hai.
+    reference_metrics = {
+        "accuracy": 0.90,
+        "precision": 0.64,
+        "recall": 0.35,
+        "f1_score": 0.45,
+        "roc_auc": 0.90,
+    }
+
+    # performance same rakhi hai.
+    # isliye performance degradation nhi honi chahiye.
+    current_metrics = reference_metrics.copy()
+
+    # temporary report path define kr rhe hai.
+    output_path = tmp_path / "monitoring_report.json"
+
+    # complete monitoring pipeline run kr rhe hai.
+    report = run_monitoring_pipeline(
+        reference_df,
+        current_df,
+        ["age", "balance"],
+        [],
+        reference_metrics,
+        current_metrics,
+        output_path,
+    )
+
+    # age distribution change ki vjah se drift detect honi chahiye.
+    assert report["drift"]["summary"]["overall_drift"] is True
+
+    # performance stable hone ki vjah se degradation nhi honi chahiye.
+    assert (
+        report["performance"]["summary"]["overall_performance_degraded"] is False
+    )
+
+    # sirf drift hone pr monitoring action investigate hona chahiye.
+    assert report["decision"]["action"] == "investigate"
+
+    # monitoring report JSON file me save honi chahiye
+    assert output_path.exists()

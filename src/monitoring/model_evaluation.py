@@ -67,3 +67,40 @@ def evaluate_baseline_model_on_datasets(
 
     # dono performance results ko ek saath return kr rhe hai.
     return reference_metrics, current_metrics
+
+def evaluate_baseline_model_with_performance_report(
+    model_path,
+    reference_df,
+    current_df,
+    y,
+    degradation_threshold=0.05,
+):
+    # saved baseline model ko reference or current
+    # dono datasets pr evaluate kr rhe hai.
+    reference_metrics, current_metrics = (
+        evaluate_baseline_model_on_datasets(
+            model_path,
+            reference_df,
+            current_df,
+            y,
+        )
+    )
+
+    # reference or current metrics ko existing
+    # performance monitoring logic me bhej rhe hai.
+    from src.monitoring.performance_report import (
+        generate_performance_report,
+    )
+
+    performance_report = generate_performance_report(
+        reference_metrics,
+        current_metrics,
+        degradation_threshold=degradation_threshold,
+    )
+
+    # metrics or performance analysis dono return kr rhe hai.
+    return {
+        "reference_metrics": reference_metrics,
+        "current_metrics": current_metrics,
+        "performance_report": performance_report,
+    }

@@ -1,6 +1,8 @@
 from src.monitoring.monitoring_report import (
     generate_monitoring_report,
 )
+from src.monitoring.report_storage import save_monitoring_report
+from src.monitoring.report_path import create_report_path
 from src.data.monitoring_data import prepare_monitoring_datasets
 from src.monitoring.model_evaluation import (
     evaluate_baseline_model_on_datasets,
@@ -67,6 +69,20 @@ def main():
         model_version="baseline",
         reference_dataset="bank-full.csv",
     )
+
+    # har monitoring run ke liye unque timestamp-based
+    # report path create kr rhe hai.
+    report_path = create_report_path()
+
+    # complete monitoring report ko JSON file me save kr rhe hai.
+    save_monitoring_report(
+        monitoring_report,
+        report_path,
+    )
+
+    # saved report ka path print kr rhe hai.
+    print("\nMonitoring report saved to:")
+    print(report_path)
 
     # Unified report se drift summary print kr rhe hai.
     print("\nDrift summary:")

@@ -170,3 +170,64 @@ def test_run_monitoring_pipeline_with_drift_but_stable_performance(tmp_path):
 
     # monitoring report JSON file me save honi chahiye
     assert output_path.exists()
+
+# ye integration test verify krta hai ki agr data drift nhi hai 
+# lekin model performance degrade ho rhi hai,
+# to action "investigate" hona chahiye.
+def test_run_monitoring_pipeline_with_performance_degradation(tmp_path):
+    # reference dataset define kr rhe hai.
+    reference_df = pd.DataFrame({
+        "age": [20] * 100,
+        "balance": [100] * 100,
+    })
+
+    # current dataset same rakhi hai.
+    # isliye data drift detect nhi honi chahiye.
+    current_df = reference_df.copy()
+
+    # reference performance define kr rhe hai.
+    reference_metrics = {
+        "accuracy": 0.90,
+        "precision": 0.64,
+        "recall": 0.35,
+        "f1_score": 0.45,
+        "roc_auc": 0.90,
+    }
+
+    # recall or F1 ko threshold se zyada decrease kr rhe hai.
+    # isse performance degradation detect honi chahiye.
+    current_metrics = {
+        "accuracy": 0.90,
+        "precision": 0.64,
+        "recall": 0.25,
+        "f1_score": 0.35,
+        "roc_auc": 0.90,
+    }
+
+    # temporary report path define kr rhe hai.
+    output_path = tmp_path / "monitoring_report.json"
+
+    # complete monitoring pipeline run kr rhe hai.
+    report = run_monitoring_pipeline(
+        reference_df,
+        current_df,
+        ["age", "balance"],
+        [],
+        reference_metrics,
+        current_metrics,
+        output_path
+    )
+
+    # data same hone ki vjah se drift nhi honi chahiye.
+    assert report["drift"]["summary"]["overall_drift"] is False
+
+    # recall or F1 degrade hue hai.
+    assert (
+        report["performance"]["summary"]["overall_performance_degraded"] is True
+    )
+
+    # sirf performance degradation hone pr investigation honi chahiye.
+    assert report["decision"]["action"] == "investigate"
+
+    # monitoring report save honi chahiye.
+    assert output_path.exists()

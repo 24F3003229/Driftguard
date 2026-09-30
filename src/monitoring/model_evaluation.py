@@ -39,3 +39,31 @@ def evaluate_model(model, X, y):
 
     # structured metrics dictionary return kr rhe hai.
     return metrics
+
+def evaluate_baseline_model_on_datasets(
+    model_path,
+    reference_df,
+    current_df,
+    y,
+):
+    # saved baseline model ko disk se load kr rhe hai.
+    model = load_baseline_model(model_path)
+
+    # same baseline model se reference dataset ki performance
+    # calculate kr rhe hai.
+    reference_metrics = evaluate_model(
+        model,
+        reference_df,
+        y,
+    )
+
+    # same baseline model se current dataset ki performance
+    # calculate kr rhe hai.
+    current_metrics = evaluate_model(
+        model,
+        current_df,
+        y,
+    )
+
+    # dono performance results ko ek saath return kr rhe hai.
+    return reference_metrics, current_metrics

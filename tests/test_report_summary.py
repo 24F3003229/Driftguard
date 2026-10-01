@@ -1,4 +1,5 @@
 import json
+from src.monitoring import report_summary
 from src.monitoring.report_summary import (
     get_latest_monitoring_summary,
 )
@@ -50,3 +51,38 @@ def test_get_latest_monitoring_summary(tmp_path):
     assert summary["drifted_features"] == 1
     assert summary["overall_performance_degraded"] is False
     assert summary["action"] == "investigate"
+
+# test verify krta hai ki CLI main function
+# latest monitoring summary ko terminal pr display krta hai.
+def test_report_summary_main(tmp_path, monkeypatch, capsys):
+    # Fake summary kr rhe hai.
+    summary = {
+        "report_generated_at": "2026-09-30T13:42:18+00:00",
+        "model_version": "baseline",
+        "reference_dataset": "bank-full.csv",
+        "overall_drift": True,
+        "drifted_features": 1,
+        "overall_performance_degraded": False,
+        "action": "investigate",
+    }
+
+    # actual report loading ko temporarily replace kr rhe hai.
+    monkeypatch.setattr(
+        report_summary,
+        "get_latest_monitoring_summary",
+        lambda: summary,
+    )
+
+    # CLI main function run kr rhe hai.
+    report_summary.main()
+
+    # terminal output capture kr rhe hai.
+    captured = capsys.readouterr()
+
+    # important information output me present honi chahiye.
+    assert "DriftGuard Monitoring Summary" in captured.out
+    assert "Model version: baseline" in captured.out
+    assert "Overall drift: True" in captured.out
+    assert "Drifted features: 1" in captured.out
+    assert "Performance degraded: False" in captured.out
+    assert "Recommended action: investigate" in captured.out

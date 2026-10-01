@@ -231,3 +231,66 @@ def test_run_monitoring_pipeline_with_performance_degradation(tmp_path):
 
     # monitoring report save honi chahiye.
     assert output_path.exists()
+
+# ye integration test verify krta hai ki agr data drift bhi hai
+# or model performance bhi degrade ho rhi hai,
+# to action "evaluate_retraining" hona chahiye.
+def test_run_monitoring_pipeline_with_drift_and_performance_degradation(tmp_path):
+    # reference dataset define kr rhe hai.
+    reference_df = pd.DataFrame({
+        "age": [20] * 100,
+        "balance": [100] * 100,
+    })
+
+    # current dataset me age distribution change kr rhe hai.
+    # isse data drift detect honi chahiye.
+    current_df = pd.DataFrame({
+        "age": [30] * 100,
+        "balance": [100] * 100,
+    })
+
+    # reference model performance define kr rhe hai.
+    reference_metrics = {
+        "accuracy": 0.90,
+        "precision": 0.64,
+        "recall": 0.35,
+        "f1_score": 0.45,
+        "roc_auc": 0.90,
+    }
+
+    # recall or F1 ko degradation threshold se zyada reduce kr rhe hai.
+    current_metrics = {
+        "accuracy": 0.90,
+        "precision": 0.64,
+        "recall": 0.25,
+        "f1_score": 0.35,
+        "roc_auc": 0.90,
+    }
+
+    # temporary report path define kr rhe hai.
+    output_path = tmp_path / "monitoring_report.json"
+
+    # complete monitoring pipeline run kr rhe hai.
+    report = run_monitoring_pipeline(
+        reference_df,
+        current_df,
+        ["age", "balance"],
+        [],
+        reference_metrics,
+        current_metrics,
+        output_path,
+    )
+
+    # age distribution change ki vjah se drift detect honi chahiye.
+    assert report["drift"]["summary"]["overall_drift"] is True
+
+    # recall or F1 degradation ki vjah se
+    # overall performance degradation true honi chahiye.
+    assert report["performance"]["summary"]["overall_performance_degraded"] is True
+
+    # dono signals present hone pr retraining evaluation 
+    # recommend honi chahiye.
+    assert report["decision"]["action"] == "evaluate_retraining"
+
+    # monitoring report save honi chahiye.
+    assert output_path.exists()
